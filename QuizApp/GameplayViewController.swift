@@ -55,6 +55,8 @@ class GameplayViewController: UIViewController, URLSessionDelegate {
     }
 
     
+    
+    
     var questions = [String]()
     var number = [Int]()
     var questionSentence = [String]()
@@ -70,7 +72,8 @@ class GameplayViewController: UIViewController, URLSessionDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         getJSONData()
-        
+        printQuestions()
+       
         
         
     }
@@ -102,31 +105,39 @@ class GameplayViewController: UIViewController, URLSessionDelegate {
         let url = URL(string: urlString)
         let session = URLSession.shared
         _ = session.dataTask(with: url!, completionHandler: {(data, response, error) -> Void in
-            if let object = try? JSONSerialization.jsonObject(with: data!, options: .allowFragments) as? NSDictionary {
-                
-                if let questionsArray = object!.value(forKey: "questions") as? NSArray {
-                    for question in questionsArray {
-                        if let questionDict = question as? NSDictionary {
-                            if let correctOpt = questionDict.value(forKey: "correctOption") as? NSArray {
-                                
-                            }
-                            if let questionSent = questionDict.value(forKey: "questionSentence") as? NSArray {
-                                print(questionSent)
-                            }
-                            if let number = questionDict.value(forKey: "number") as? NSArray {
-                                print(number)
-                            }
-                            if let opt = questionDict.value(forKey: "options")  {
-                                print(opt)
-                            }
-                        }
+            if let object = try? JSONSerialization.jsonObject(with: data!, options: .allowFragments) as? [String: Any] ,
+                let questions = object?["questions"] as? [[String: Any]]
+            {
+                for question in questions {
+                    //print(question["number"]!)
+                    self.number.append(question["number"]! as! Int)
+                    //print(question["questionSentence"]!)
+                    self.questionSentence.append(question["questionSentence"]! as! String)
+                    self.correctOption.append(question["correctOption"]! as! String)
+                    
+                    if let options = question["options"] as? [String: Any] {
+                        self.optionA.append(options["A"]! as! String)
+                        self.optionB.append(options["B"]! as! String)
+                        self.optionC.append(options["C"]! as! String)
+                        self.optionD.append(options["D"]! as! String)
                     }
                 }
+                
+            self.questionLabel.text = self.questionSentence[0]
+            self.answerALabel.text = self.optionA[0]
+        
+                }
+                
+                
                 //print(object)
                 //print(object?.value(forKey: "numberOfQuestions"))
                 //print(object?.value(forKey: "questions"))
             }
-        }).resume()
+        ).resume()
+    }
+    
+    func printQuestions() {
+        print(questionSentence)
     }
     
     

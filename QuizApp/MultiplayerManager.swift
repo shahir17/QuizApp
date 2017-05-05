@@ -23,12 +23,15 @@ class MPCManager: UIViewController, MCBrowserViewControllerDelegate, MCSessionDe
     var advertiser: MCAdvertiserAssistant? = nil
     
     
-    
     @IBAction func connect(_ sender: Any) {
         present(browser, animated: true, completion: nil)
     }
     
+    @IBOutlet weak var segmentControl: UISegmentedControl!
     
+    @IBAction func indexChanged(_ sender: UISegmentedControl) {
+        
+            }
     
     
     override func viewDidLoad() {
