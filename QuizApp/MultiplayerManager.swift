@@ -11,6 +11,9 @@ import MultipeerConnectivity
 
 class MPCManager: UIViewController, MCBrowserViewControllerDelegate, MCSessionDelegate {
     
+    
+    
+    
     var session: MCSession!
 
     var peerID: MCPeerID!
@@ -18,6 +21,15 @@ class MPCManager: UIViewController, MCBrowserViewControllerDelegate, MCSessionDe
     var browser: MCBrowserViewController!
     
     var advertiser: MCAdvertiserAssistant? = nil
+    
+    
+    
+    @IBAction func connect(_ sender: Any) {
+        present(browser, animated: true, completion: nil)
+    }
+    
+    
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,6 +43,9 @@ class MPCManager: UIViewController, MCBrowserViewControllerDelegate, MCSessionDe
         advertiser?.start()
         session.delegate = self
         browser.delegate = self
+        
+        //present(browser, animated: true, completion: nil)
+        
     }
     func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
         dismiss(animated: true, completion: nil)
