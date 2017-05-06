@@ -54,6 +54,7 @@ class GameplayViewController: UIViewController, URLSessionDelegate {
     @IBAction func restartQuizButton(_ sender: Any) {
     }
 
+    @IBOutlet weak var timeLabel: UILabel!
     
     
     
@@ -65,16 +66,51 @@ class GameplayViewController: UIViewController, URLSessionDelegate {
     var optionB = [String]()
     var optionC = [String]()
     var optionD = [String]()
+    var currentRound = 0
     
+    var lastTapped:UILabel?
+    var isPlayable = true
+    var defaultLabelColor: UIColor?
     
+    var score = 0
+    var multiplayer = false
+    var numPlayers = 1
+    
+    var roundTimer: Timer?
+    var time = 20
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         getJSONData()
         printQuestions()
-       
         
+        if numPlayers == 1 {
+            p2AnswerLabel.isHidden = true
+            p2Image.isHidden = true
+            p2ScoreLabel.isHidden = true
+            p3AnswerLabel.isHidden = true
+            p3Image.isHidden = true
+            p3ScoreLabel.isHidden = true
+            p4AnswerLabel.isHidden = true
+            p4Image.isHidden = true
+            p4ScoreLabel.isHidden = true
+        }
+        
+        defaultLabelColor = answerALabel.backgroundColor
+       
+        let answerTapA = UITapGestureRecognizer(target: self, action: #selector(self.tapAnswer))
+        let answerTapB = UITapGestureRecognizer(target: self, action: #selector(self.tapAnswer))
+        let answerTapC = UITapGestureRecognizer(target: self, action: #selector(self.tapAnswer))
+        let answerTapD = UITapGestureRecognizer(target: self, action: #selector(self.tapAnswer))
+        answerALabel.addGestureRecognizer(answerTapA)
+        answerBLabel.addGestureRecognizer(answerTapB)
+        answerCLabel.addGestureRecognizer(answerTapC)
+        answerDLabel.addGestureRecognizer(answerTapD)
+        answerALabel.isUserInteractionEnabled = true
+        answerBLabel.isUserInteractionEnabled = true
+        answerCLabel.isUserInteractionEnabled = true
+        answerDLabel.isUserInteractionEnabled = true
         
     }
 
@@ -116,30 +152,156 @@ class GameplayViewController: UIViewController, URLSessionDelegate {
                     self.correctOption.append(question["correctOption"]! as! String)
                     
                     if let options = question["options"] as? [String: Any] {
-                        self.optionA.append(options["A"]! as! String)
-                        self.optionB.append(options["B"]! as! String)
-                        self.optionC.append(options["C"]! as! String)
-                        self.optionD.append(options["D"]! as! String)
+                        self.optionA.append("A: " + (options["A"]! as! String))
+                        self.optionB.append("B: " + (options["B"]! as! String))
+                        self.optionC.append("C: " + (options["C"]! as! String))
+                        self.optionD.append("D: " + (options["D"]! as! String))
                     }
                 }
-                
-            self.questionLabel.text = self.questionSentence[0]
-            self.answerALabel.text = self.optionA[0]
-        
-                }
-                
-                
-                //print(object)
-                //print(object?.value(forKey: "numberOfQuestions"))
-                //print(object?.value(forKey: "questions"))
+                self.nextQuestion()
             }
-        ).resume()
+        }).resume()
     }
     
     func printQuestions() {
         print(questionSentence)
     }
     
-    
-    
+    func nextQuestion() {
+        answerALabel.backgroundColor = defaultLabelColor
+        answerBLabel.backgroundColor = defaultLabelColor
+        answerCLabel.backgroundColor = defaultLabelColor
+        answerDLabel.backgroundColor = defaultLabelColor
+        
+        p1AnswerLabel.text = "?"
+        p2AnswerLabel.text = "?"
+        p3AnswerLabel.text = "?"
+        p4AnswerLabel.text = "?"
+        
+        roundTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(timeLeft), userInfo: nil, repeats: true)
+        
+        if currentRound < questionSentence.count {
+            
+            self.questionLabel.text = self.questionSentence[currentRound]
+            self.answerALabel.text = self.optionA[currentRound]
+            self.answerBLabel.text = self.optionB[currentRound]
+            self.answerCLabel.text = self.optionC[currentRound]
+            self.answerDLabel.text = self.optionD[currentRound]
+            self.qNumLabel.text = "Question \(currentRound + 1)"
+            
+            
+            
+            isPlayable = true
+        } else {
+            // TODO: end game
+            isPlayable = false
+            self.questionLabel.text = "Game over!"
+            self.answerALabel.text = ""
+            self.answerBLabel.text = ""
+            self.answerCLabel.text = ""
+            self.answerDLabel.text = ""
+            self.qNumLabel.text = ""
+            stopTimer()
+        }
+        
     }
+    
+    func submitAnswer(answer: Character) {
+        if multiplayer {
+            // Send answer to players
+        } else {
+            stopTimer()
+            showAnswer(String(answer))
+        }
+    }
+    
+    func showAnswer(_ picked: String ) {
+        if correctOption[currentRound] == picked {
+            score += 1
+            var label: UILabel?
+            switch picked {
+            case "A":
+                label = answerALabel
+            case "B":
+                label = answerBLabel
+            case "C":
+                label = answerCLabel
+            case "D":
+                label = answerDLabel
+            default:
+                break
+            }
+            
+            label?.backgroundColor = UIColor.green
+        } else {
+            var correctLabel: UILabel?
+            var pickedLabel: UILabel?
+            
+            switch correctOption[currentRound] {
+            case "A":
+                correctLabel = answerALabel
+            case "B":
+                correctLabel = answerBLabel
+            case "C":
+                correctLabel = answerCLabel
+            case "D":
+                correctLabel = answerDLabel
+            default:
+                break
+            }
+            
+            switch picked {
+            case "A":
+                pickedLabel = answerALabel
+            case "B":
+                pickedLabel = answerBLabel
+            case "C":
+                pickedLabel = answerCLabel
+            case "D":
+                pickedLabel = answerDLabel
+            default:
+                break
+            }
+            correctLabel?.backgroundColor = UIColor.green
+            pickedLabel?.backgroundColor = UIColor.red
+        }
+        currentRound += 1
+        lastTapped = nil
+        p1ScoreLabel.text = String(score)
+        isPlayable = false
+        p1AnswerLabel.text = picked
+        Timer.scheduledTimer(timeInterval: 3.0, target: self, selector: #selector(nextQuestion), userInfo: nil, repeats: false)
+    }
+    
+    func timeLeft() {
+        time -= 1
+        timeLabel.text = String(time)
+        if time < 1 {
+            time = 20
+            showAnswer("")
+            stopTimer()
+        }
+    }
+    
+    func stopTimer() {
+        roundTimer?.invalidate()
+        roundTimer = nil
+        time = 20
+    }
+    
+    func tapAnswer(sender: UITapGestureRecognizer) {
+        if !isPlayable {
+            return
+        }
+        if let label = sender.view as? UILabel {
+            if label == lastTapped {
+                submitAnswer(answer: (label.text?.characters.first)!)
+            } else {
+                lastTapped?.backgroundColor = defaultLabelColor
+                label.backgroundColor = UIColor.yellow
+                lastTapped = label
+            }
+        }
+    }
+    
+}
